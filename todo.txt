@@ -1,0 +1,5 @@
+set the correct sequence number
+send chunks in intervals
+write data to file
+terminate sender and requester when END packet is received
+parse command line args for requester and set the variables
