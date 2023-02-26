@@ -113,6 +113,7 @@ if requested_file_name not in tracker_dict:
     print('exiting program...')
     exit()
 
+print(tracker_dict)
 file_id_dict = tracker_dict[requested_file_name]
 number_of_chunks_to_request = len(file_id_dict)
 print(file_id_dict)
