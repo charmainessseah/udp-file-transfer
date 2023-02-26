@@ -1,6 +1,7 @@
 import argparse
 from enum import Enum
 from datetime import datetime
+import math
 import socket
 import struct
 
@@ -72,7 +73,7 @@ requester_port_number = args.requester_port # for testing it is 12345
 sender_port_number = args.sender_port # for testing it is 12344
 sequence_number = args.seq_no
 rate = args.rate
-data_length = args.length
+max_size_payload_in_bytes = args.length
 
 # create socket object
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -102,7 +103,17 @@ else:
     print("sender's print information:")
 
     # send data packets here
-    send_packet(data, Packet_Type.DATA.value, sequence_number, requester_host_name, requester_port_number)
+    remaining_bytes_to_send = len(data)
+    num_packets = math.ceil(remaining_bytes_to_send / max_size_payload_in_bytes)
+    print('num packets to send: ', num_packets)
+
+    starting_index = 0
+    while remaining_bytes_to_send > 0:
+        sliced_data = data[starting_index:starting_index + max_size_payload_in_bytes]
+        send_packet(sliced_data, Packet_Type.DATA.value, sequence_number, requester_host_name, requester_port_number)
+        remaining_bytes_to_send -= max_size_payload_in_bytes
+        starting_index += max_size_payload_in_bytes
+        sequence_number += len(sliced_data)
 
     # send end packet when done with data packets
     sequence_number = 0

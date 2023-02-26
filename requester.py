@@ -2,7 +2,6 @@ import argparse
 from collections import OrderedDict
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
 import socket
 import struct 
 
@@ -83,7 +82,7 @@ def send_request_packet_to_sender(tracker_dict, file_name, id):
     # assemble udp header
     packet_type = (Packet_Type.REQUEST.value).encode('ascii')
     sequence_number = 0
-    data_length = len(data)
+    data_length = 0
     header = struct.pack('!cII', packet_type, sequence_number, data_length)
 
     packet_with_header = header + data
@@ -125,15 +124,11 @@ for id in range(0, number_of_chunks_to_request):
 print('-----------------------------------------------------------------------------')
 print("Requester's print information:")
 
-# fill this list in order of data chunks that are received
-data_chunks = [None] * number_of_chunks_to_request
-data_chunks_index = 0
+# TODO: change this file name when ready
+results_file = open('result.txt', 'a')
 
-# dictionary is used to keep track of the index of data chunk for a sequence number in data_chunks
-# dictionary format = { data chunk sequence number: data_chunks_index }
-sequence_number_to_data_chunks_index_dict = {}
-
-while True:
+end_packets_received = 0
+while end_packets_received != number_of_chunks_to_request:
     packet_with_header, sender_address = sock.recvfrom(1024)
     header = struct.unpack("!cII", packet_with_header[:9])
     data = packet_with_header[9:]
@@ -141,29 +136,12 @@ while True:
     packet_type = header[0].decode('ascii')
 
     if (packet_type == 'D'):
-        sequence_number = header[1]
-        data_chunks[data_chunks_index] = data.decode("utf-8")
-        sequence_number_to_data_chunks_index_dict[sequence_number] = data_chunks_index
-        data_chunks_index += 1
-    
+        results_file.write(data.decode("utf-8"))
     print_receipt_information(header, data)
 
     if (packet_type == 'E'):
-        break
+        end_packets_received += 1
     
 print('-----------------------------------------------------------------------------')
 
-# TODO: change this file name when ready
-write_results_file = open('result.txt', 'a')
-
-# sort dictionary by increasing sequence number (dict key)
-print('before sort')
-print(sequence_number_to_data_chunks_index_dict)
-print('after sort')
-sequence_number_to_data_chunks_index_dict = OrderedDict(sorted(sequence_number_to_data_chunks_index_dict.items()))
-print(sequence_number_to_data_chunks_index_dict)
-
-for sequence_number, index_number in sequence_number_to_data_chunks_index_dict.items():
-    write_results_file.write(data_chunks[index_number])
-
-write_results_file.close()
+results_file.close()

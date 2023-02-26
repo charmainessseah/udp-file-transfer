@@ -1,4 +1,1 @@
-set the correct sequence number
-send chunks in intervals
-terminate sender and requester when END packet is received
-send end packet in sender if file does not exist
+send packets at specified rate
