@@ -9,13 +9,6 @@ class Packet_Type(Enum):
     DATA = 'D'
     END = 'E'
 
-# variables sent as command line arguments, initializing with dummy values
-requester_port_number = 12345
-sender_port_number = 12344
-sequence_number = 0
-data_length = 0
-rate = 0
-
 def command_line_args_range_checker(input):
     if (not input.isnumeric()):
         print('invalid int value: ', input)
@@ -32,8 +25,8 @@ def parse_command_line():
     parser.add_argument('-p', '--sender_port', help='port on which the sender waits for requests', required=True, type=command_line_args_range_checker, metavar="[2050,65536]")
     parser.add_argument('-g', '--requester_port', help='port on which the requester is waiting', required=True, type=command_line_args_range_checker, metavar="[2050,65536]")
     parser.add_argument('-r', '--rate', help='the number of packets to be sent per second', required=True, type=int)
-    parser.add_argument('-q', '--seq_no', help='the initial sequence of the packet exchange', required=True)
-    parser.add_argument('-l', '--length', help='length of the payload (in bytes) in the packets', required=True)
+    parser.add_argument('-q', '--seq_no', help='the initial sequence of the packet exchange', required=True, type=int)
+    parser.add_argument('-l', '--length', help='length of the payload (in bytes) in the packets', required=True, type=int)
 
     args = parser.parse_args()
 
@@ -73,12 +66,13 @@ def send_packet(data, packet_type, sequence_number, requester_host_name, request
     sock.sendto(packet_with_header, (requester_host_name, requester_port_number))
     print_packet_information(requester_host_name, sequence_number, data, packet_type)
 
-# parse_command_line_args()
-# print('sender port number: ', sender_port_number)
-# print('requester port number: ', requester_port_number)
-
+# set command line args as global variables
 args = parse_command_line()
-print(args)
+requester_port_number = args.requester_port # for testing it is 12345
+sender_port_number = args.sender_port # for testing it is 12344
+sequence_number = args.seq_no
+rate = args.rate
+data_length = args.length
 
 # create socket object
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

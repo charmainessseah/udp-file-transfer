@@ -13,7 +13,7 @@ class Packet_Type(Enum):
 def parse_command_line_args():
     parser = argparse.ArgumentParser()
     
-    parser.add_argument('-p', '--requester_port', help='port on which the requester waits for packets', required=True)
+    parser.add_argument('-p', '--requester_port', help='port on which the requester waits for packets', required=True, type=int)
     parser.add_argument('-o', '--file_name', help='the name of the file that is being requested', required=True)
 
     args = parser.parse_args()
@@ -92,15 +92,16 @@ def send_request_packet_to_sender(tracker_dict, file_name, id):
 args = parse_command_line_args()
 print(args.requester_port, args.file_name)
 
-#Global variables
-udp_port = 12345
-
-tracker_dict = read_and_parse_tracker_file('tracker-test.txt')
+# for testing
+# requester_port = 12345
+# file name: 'tracker-test.txt'
+requester_port = args.requester_port
+tracker_dict = read_and_parse_tracker_file(args.file_name)
 
 # create socket object
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-udp_host = socket.gethostname()
-sock.bind((udp_host, udp_port))
+requester_host_name = socket.gethostname()
+sock.bind((requester_host_name, requester_port))
 
 # request the senders for packets
 requested_file_name = 'split.txt'
