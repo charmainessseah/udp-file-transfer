@@ -1,25 +1,23 @@
+import argparse
 from collections import OrderedDict
 from datetime import datetime
 from enum import Enum
 import socket
 import struct 
-import sys
 
 class Packet_Type(Enum):
     REQUEST = 'R'
     DATA = 'D'
     END = 'E'
 
-#Checking the command line arguments
-def check_sys_arg():
-    if(len(sys.argv) != 5):
-        print('Please enter the correct number of arguments')
-    if(str(sys.argv[1]) != '-p' | str(sys.argv[3]) != '-o'):
-        print('Please enter arguments in correct format')
-    if(int(sys.argv[2]) <= 2049 | int(sys.argv[2]) >= 65536):
-        print('Please enter the correct requester port number')
-    global udp_port
-    udp_port = sys.argv[2]
+def parse_command_line_args():
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument('-p', '--requester_port', help='port on which the requester waits for packets', required=True)
+    parser.add_argument('-o', '--file_name', help='the name of the file that is being requested', required=True)
+
+    args = parser.parse_args()
+    return args
 
 # printing information for each packet that arrives
 def print_receipt_information(header, data):
@@ -90,6 +88,9 @@ def send_request_packet_to_sender(tracker_dict, file_name, id):
 
     print('sending request to sender...')
     sock.sendto(packet_with_header, (sender_host_name, sender_port_number))
+
+args = parse_command_line_args()
+print(args.requester_port, args.file_name)
 
 #Global variables
 udp_port = 12345
