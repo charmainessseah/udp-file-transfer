@@ -1,9 +1,10 @@
 import argparse
-from enum import Enum
 from datetime import datetime
+from enum import Enum
 import math
 import socket
 import struct
+import time
 
 class Packet_Type(Enum):
     REQUEST = 'R'
@@ -107,15 +108,20 @@ else:
     num_packets = math.ceil(remaining_bytes_to_send / max_size_payload_in_bytes)
     print('num packets to send: ', num_packets)
 
+    sending_interval_in_seconds = (1000 / rate) / 1000
+
     starting_index = 0
     while remaining_bytes_to_send > 0:
         sliced_data = data[starting_index:starting_index + max_size_payload_in_bytes]
+        time.sleep(sending_interval_in_seconds)
         send_packet(sliced_data, Packet_Type.DATA.value, sequence_number, requester_host_name, requester_port_number)
         remaining_bytes_to_send -= max_size_payload_in_bytes
         starting_index += max_size_payload_in_bytes
         sequence_number += len(sliced_data)
 
     # send end packet when done with data packets
+    time.sleep(sending_interval_in_seconds)
+
     sequence_number = 0
     length = 0
     send_packet('', Packet_Type.END.value, sequence_number, requester_host_name, requester_port_number)
