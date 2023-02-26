@@ -90,8 +90,13 @@ print('received filename from requester: ', file_name.decode('utf-8'))
 requester_host_name = socket.gethostname()
 
 # read the file data
-# TODO: if file does not exist (data == -1), then we send the END packet immediately
 data = read_file(file_name)
+# file does not exist
+if data == -1:
+    # send END packet
+    sequence_number = 0
+    length = 0
+    send_packet('', Packet_Type.END.value, sequence_number, requester_host_name, requester_port_number)
 
 print('-----------------------------------------------------------------------------')
 print("sender's print information:")

@@ -41,6 +41,7 @@ def read_and_parse_tracker_file(file_name):
         file = open(file_name, "r")
     except:
         print('Please enter the correct file name!')
+        return
     
     file_lines = file.readlines()
 
@@ -89,14 +90,16 @@ def send_request_packet_to_sender(tracker_dict, file_name, id):
     print('sending request to sender...')
     sock.sendto(packet_with_header, (sender_host_name, sender_port_number))
 
-args = parse_command_line_args()
-print(args.requester_port, args.file_name)
-
+# TODO: change theses values when ready
 # for testing
 # requester_port = 12345
 # file name: 'tracker-test.txt'
+
+# set global variables from command line args
+args = parse_command_line_args()
 requester_port = args.requester_port
-tracker_dict = read_and_parse_tracker_file(args.file_name)
+requested_file_name = args.file_name
+tracker_dict = read_and_parse_tracker_file('tracker-test.txt')
 
 # create socket object
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -104,7 +107,6 @@ requester_host_name = socket.gethostname()
 sock.bind((requester_host_name, requester_port))
 
 # request the senders for packets
-requested_file_name = 'split.txt'
 file_id_dict = tracker_dict[requested_file_name]
 number_of_chunks_to_request = len(file_id_dict)
 print(file_id_dict)
@@ -144,7 +146,9 @@ while True:
     
 print('-----------------------------------------------------------------------------')
 
-file = open('result.txt', 'a')
+# TODO: change this file name when ready
+write_results_file = open('result.txt', 'a')
+
 # sort dictionary by increasing sequence number (dict key)
 print('before sort')
 print(sequence_number_to_data_chunks_index_dict)
@@ -153,6 +157,6 @@ sequence_number_to_data_chunks_index_dict = OrderedDict(sorted(sequence_number_t
 print(sequence_number_to_data_chunks_index_dict)
 
 for sequence_number, index_number in sequence_number_to_data_chunks_index_dict.items():
-    file.write(data_chunks[index_number])
+    write_results_file.write(data_chunks[index_number])
 
-file.close()
+write_results_file.close()
