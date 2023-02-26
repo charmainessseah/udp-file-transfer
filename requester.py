@@ -2,6 +2,7 @@ import argparse
 from collections import OrderedDict
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
 import socket
 import struct 
 
@@ -107,6 +108,11 @@ requester_host_name = socket.gethostname()
 sock.bind((requester_host_name, requester_port))
 
 # request the senders for packets
+if requested_file_name not in tracker_dict:
+    print('error: no information on requested file')
+    print('exiting program...')
+    exit()
+
 file_id_dict = tracker_dict[requested_file_name]
 number_of_chunks_to_request = len(file_id_dict)
 print(file_id_dict)
