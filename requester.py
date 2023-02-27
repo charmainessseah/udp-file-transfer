@@ -1,5 +1,4 @@
 import argparse
-from collections import OrderedDict
 from datetime import datetime
 from enum import Enum
 import socket
@@ -20,15 +19,17 @@ def parse_command_line_args():
     return args
 
 # printing information for each packet that arrives
-def print_receipt_information(header, data):
+def print_receipt_information(header, data, sender_address):
     packet_type = header[0].decode('ascii')
     if (packet_type == 'D'):
         print('DATA Packet')
     elif (packet_type == 'E'):
         print('END Packet')
 
+    sender_address = str(sender_address[0]) + ':' + str(sender_address[1])
+
     print('recv time:        ', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
-    print('sender addr:      ')
+    print('sender addr:      ', sender_address)
     print('sequence num:     ', header[1])
     print('length:           ', header[2])
     print('payload:          ', data.decode("utf-8"))
@@ -101,7 +102,6 @@ def send_request_packet_to_sender(tracker_dict, file_name, id):
 
     sock.sendto(packet_with_header, (sender_host_name, sender_port_number))
 
-# TODO: change theses values when ready
 # for testing
 # requester_port = 12345
 # file name: 'tracker-test.txt'
@@ -110,7 +110,7 @@ def send_request_packet_to_sender(tracker_dict, file_name, id):
 args = parse_command_line_args()
 requester_port = args.requester_port
 requested_file_name = args.file_name
-tracker_dict = read_and_parse_tracker_file('tracker-test.txt')
+tracker_dict = read_and_parse_tracker_file('tracker-test.txt') #TODO: change this to tracker.txt
 
 # create socket object
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -131,8 +131,6 @@ for id in range(0, number_of_chunks_to_request):
     send_request_packet_to_sender(tracker_dict, requested_file_name, id + 1)
 
 # wait for requested packets from sender while the END packet has not been sent
-print('-----------------------------------------------------------------------------')
-print("Requester's print information:")
 
 # TODO: change this file name when ready
 results_file = open('result.txt', 'a')
@@ -153,7 +151,7 @@ while end_packets_received != number_of_chunks_to_request:
         data_packets_received += 1
         payload_length = header[2]
         data_bytes_received += payload_length
-    print_receipt_information(header, data)
+    print_receipt_information(header, data, sender_address)
 
     if (packet_type == 'E'):
         end_packets_received += 1
@@ -165,8 +163,6 @@ while end_packets_received != number_of_chunks_to_request:
         data_packets_received = 0
         data_bytes_received = 0
     
-print('-----------------------------------------------------------------------------')
-
 results_file.close()
 
 

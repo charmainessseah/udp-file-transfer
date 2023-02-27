@@ -100,14 +100,11 @@ if data == -1:
     length = 0
     send_packet('', Packet_Type.END.value, sequence_number, requester_host_name, requester_port_number)
 else:     
-    print('-----------------------------------------------------------------------------')
-    print("sender's print information:")
-
     # send data packets here
     remaining_bytes_to_send = len(data)
     num_packets = math.ceil(remaining_bytes_to_send / max_size_payload_in_bytes)
     print('num packets to send: ', num_packets)
-
+    print('-----------------------------------------------------------------------------')
     sending_interval_in_seconds = (1000 / rate) / 1000
 
     starting_index = 0
@@ -125,5 +122,3 @@ else:
     sequence_number = 0
     length = 0
     send_packet('', Packet_Type.END.value, sequence_number, requester_host_name, requester_port_number)
-
-    print('-----------------------------------------------------------------------------')
