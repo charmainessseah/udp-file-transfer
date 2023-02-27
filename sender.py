@@ -41,11 +41,11 @@ def print_packet_information(requester_host_name, sequence_number, data, packet_
     elif (packet_type == 'E'):
         print('END Packet')
 
-    print('send time: ', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
-    print('requester addr: ', requester_host_name)
-    print('Sequence num: ', sequence_number)
-    print('length: ', len(data))
-    print('payload: ', data.decode('utf-8'))
+    print('send time:       ', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+    print('requester addr:  ', requester_host_name)
+    print('Sequence num:    ', sequence_number)
+    print('length:          ', len(data))
+    print('payload:         ', data.decode('utf-8'))
     print()
 
 # if file exists, read the file and return the file data

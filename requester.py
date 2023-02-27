@@ -27,12 +27,24 @@ def print_receipt_information(header, data):
     elif (packet_type == 'E'):
         print('END Packet')
 
-    print('recv time: ', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
-    print('requester addr: ')
-    print('sequence num: ', header[1])
-    print('length: ', header[2])
-    print('payload: ', data.decode("utf-8"))
+    print('recv time:        ', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+    print('sender addr:      ')
+    print('sequence num:     ', header[1])
+    print('length:           ', header[2])
+    print('payload:          ', data.decode("utf-8"))
     print()
+
+def print_summary(sender_address, total_data_packets, total_data_bytes, start_time, end_time):
+    time_elapsed = end_time - start_time
+    time_elapsed_in_miliseconds = time_elapsed.total_seconds() * 1000.0
+    rate = total_data_packets / time_elapsed.total_seconds()
+    sender_address = str(sender_address[0]) + ':' + str(sender_address[1])
+    print('Summary')
+    print('sender addr:              ', sender_address)
+    print('Total Data packets:       ', total_data_packets)
+    print('Total Data bytes:         ', total_data_bytes)
+    print('Average packets/ second:  ', rate)
+    print('Duration of the test:     ', time_elapsed_in_miliseconds, ' ms')
 
 # reads and parses tracker.txt into a nested dictionary
 # details of nested dictionary are outlined below
@@ -87,7 +99,6 @@ def send_request_packet_to_sender(tracker_dict, file_name, id):
 
     packet_with_header = header + data
 
-    print('sending request to sender...')
     sock.sendto(packet_with_header, (sender_host_name, sender_port_number))
 
 # TODO: change theses values when ready
@@ -112,10 +123,9 @@ if requested_file_name not in tracker_dict:
     print('exiting program...')
     exit()
 
-print(tracker_dict)
 file_id_dict = tracker_dict[requested_file_name]
 number_of_chunks_to_request = len(file_id_dict)
-print(file_id_dict)
+start_time = datetime.now()
 
 for id in range(0, number_of_chunks_to_request):
     send_request_packet_to_sender(tracker_dict, requested_file_name, id + 1)
@@ -128,6 +138,9 @@ print("Requester's print information:")
 results_file = open('result.txt', 'a')
 
 end_packets_received = 0
+data_packets_received = 0
+data_bytes_received = 0
+
 while end_packets_received != number_of_chunks_to_request:
     packet_with_header, sender_address = sock.recvfrom(1024)
     header = struct.unpack("!cII", packet_with_header[:9])
@@ -137,11 +150,23 @@ while end_packets_received != number_of_chunks_to_request:
 
     if (packet_type == 'D'):
         results_file.write(data.decode("utf-8"))
+        data_packets_received += 1
+        payload_length = header[2]
+        data_bytes_received += payload_length
     print_receipt_information(header, data)
 
     if (packet_type == 'E'):
         end_packets_received += 1
+        end_time = datetime.now()
+        print_summary(sender_address, data_packets_received, data_bytes_received, start_time, end_time)
+        
+        # reset statistics
+        start_time = datetime.now()
+        data_packets_received = 0
+        data_bytes_received = 0
     
 print('-----------------------------------------------------------------------------')
 
 results_file.close()
+
+
