@@ -36,7 +36,10 @@ def print_receipt_information(header, data, sender_address):
     print('payload:          ', data.decode("utf-8"))
     print()
 
-def print_summary(sender_address, total_data_packets, total_data_bytes, start_time, end_time):
+def print_summary(sender_stats, sender_full_address, start_time, end_time):
+    total_data_packets = sender_stats[sender_full_address]['data_packets_received']
+    total_data_bytes = sender_stats[sender_full_address]['data_bytes_received']
+
     time_elapsed = end_time - start_time
     time_elapsed_in_miliseconds = time_elapsed.total_seconds() * 1000.0
     rate = total_data_packets / time_elapsed.total_seconds()
@@ -47,6 +50,7 @@ def print_summary(sender_address, total_data_packets, total_data_bytes, start_ti
     print('Total Data bytes:         ', total_data_bytes)
     print('Average packets/ second:  ', rate)
     print('Duration of the test:     ', time_elapsed_in_miliseconds, ' ms')
+    print()
 
 # reads and parses tracker.txt into a nested dictionary
 # details of nested dictionary are outlined below
@@ -103,6 +107,9 @@ def send_request_packet_to_sender(tracker_dict, file_name, id):
 
     sock.sendto(packet_with_header, (sender_host_name, sender_port_number))
 
+# file_storage_dict = {
+#   sender_full_address: ''
+# }
 def create_file_data_storage_dict(file_id_dict):
     num_senders = len(file_id_dict)
     file_storage_dict = OrderedDict()
@@ -117,9 +124,23 @@ def create_file_data_storage_dict(file_id_dict):
     
     return file_storage_dict
 
-# for testing
-# requester_port = 12345
-# file name: 'tracker-test.txt'
+# pass in file_data_storage_dict to have easy access to all sender's full address
+# create a dict to store a sender's stats
+# sender_stats = {
+#       sender_full_address = {
+#           data_packets_received: int,
+#           data_bytes_received: int
+#       }
+# }
+def create_sender_stats_dict(file_data_storage_dict):
+    sender_stats = {}
+    
+    for sender_address, file_data in file_data_storage_dict.items():
+        sender_stats[sender_address] = {}
+        sender_stats[sender_address]['data_packets_received'] = 0
+        sender_stats[sender_address]['data_bytes_received'] = 0
+    
+    return sender_stats
 
 # set global variables from command line args
 args = parse_command_line_args()
@@ -149,9 +170,9 @@ for id in range(0, number_of_chunks_to_request):
 
 # wait for requested packets from sender while the END packet has not been sent
 
+sender_stats = create_sender_stats_dict(file_data_storage_dict)
+
 end_packets_received = 0
-data_packets_received = 0
-data_bytes_received = 0
 
 while end_packets_received != number_of_chunks_to_request:
     packet_with_header, sender_address = sock.recvfrom(1024)
@@ -163,25 +184,20 @@ while end_packets_received != number_of_chunks_to_request:
     packet_type = header[0].decode('ascii')
 
     if (packet_type == 'D'):
-        data_packets_received += 1
+        sender_stats[sender_full_address]['data_packets_received'] += 1
         payload_length = header[2]
-        data_bytes_received += payload_length
+        sender_stats[sender_full_address]['data_bytes_received'] += payload_length
 
         file_data_storage_dict[sender_full_address] += data.decode("utf-8")
+        
     print_receipt_information(header, data, sender_address)
 
     if (packet_type == 'E'):
         end_packets_received += 1
         end_time = datetime.now()
-        print_summary(sender_address, data_packets_received, data_bytes_received, start_time, end_time)
-        
-        # reset statistics
-        start_time = datetime.now()
-        data_packets_received = 0
-        data_bytes_received = 0
+        print_summary(sender_stats, sender_full_address, start_time, end_time)
 
 results_file = open(requested_file_name, 'a')
-# results_file = open('result.txt', 'a')
 
 for sender_address, file_data in file_data_storage_dict.items():
     results_file.write(file_data)
