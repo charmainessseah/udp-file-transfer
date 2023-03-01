@@ -1,4 +1,5 @@
 import argparse
+from collections import OrderedDict
 from datetime import datetime
 from enum import Enum
 import socket
@@ -102,6 +103,25 @@ def send_request_packet_to_sender(tracker_dict, file_name, id):
 
     sock.sendto(packet_with_header, (sender_host_name, sender_port_number))
 
+def create_file_data_storage_dict(file_id_dict):
+    print('file id dict: ')
+    print(file_id_dict)
+    
+    num_senders = len(file_id_dict)
+    file_storage_dict = OrderedDict()
+    
+    for sender in range(0, num_senders):
+        sender_id = sender + 1
+        sender_details = file_id_dict[sender_id]
+        sender_host_name = sender_details['sender_host_name']
+        sender_port_number = sender_details['sender_port_number']
+        sender_full_address = str(sender_host_name) + ':' + str(sender_port_number)
+        file_storage_dict[sender_full_address] = ''
+        print('sender addr: ', sender_full_address)
+    
+    print(file_storage_dict)
+    return file_storage_dict
+
 # for testing
 # requester_port = 12345
 # file name: 'tracker-test.txt'
@@ -127,13 +147,12 @@ file_id_dict = tracker_dict[requested_file_name]
 number_of_chunks_to_request = len(file_id_dict)
 start_time = datetime.now()
 
+file_data_storage_dict = create_file_data_storage_dict(file_id_dict)
+
 for id in range(0, number_of_chunks_to_request):
     send_request_packet_to_sender(tracker_dict, requested_file_name, id + 1)
 
 # wait for requested packets from sender while the END packet has not been sent
-
-# TODO: change this file name when ready
-results_file = open('result.txt', 'a')
 
 end_packets_received = 0
 data_packets_received = 0
@@ -141,16 +160,20 @@ data_bytes_received = 0
 
 while end_packets_received != number_of_chunks_to_request:
     packet_with_header, sender_address = sock.recvfrom(1024)
+    sender_full_address = str(sender_address[0]) + ':' + str(sender_address[1])
+
     header = struct.unpack("!cII", packet_with_header[:9])
     data = packet_with_header[9:]
 
     packet_type = header[0].decode('ascii')
 
     if (packet_type == 'D'):
-        results_file.write(data.decode("utf-8"))
+        # results_file.write(data.decode("utf-8"))
         data_packets_received += 1
         payload_length = header[2]
         data_bytes_received += payload_length
+
+        file_data_storage_dict[sender_full_address] += data.decode("utf-8")
     print_receipt_information(header, data, sender_address)
 
     if (packet_type == 'E'):
@@ -162,7 +185,16 @@ while end_packets_received != number_of_chunks_to_request:
         start_time = datetime.now()
         data_packets_received = 0
         data_bytes_received = 0
-    
+
+print('printing file data dict')
+print(file_data_storage_dict)
+
+# TODO: change this file name when ready
+results_file = open('result.txt', 'a')
+
+for sender_address, file_data in file_data_storage_dict.items():
+    results_file.write(data.decode("utf-8"))
+
 results_file.close()
 
 
