@@ -117,7 +117,6 @@ def create_file_data_storage_dict(file_id_dict):
         sender_port_number = sender_details['sender_port_number']
         sender_full_address = str(sender_host_name) + ':' + str(sender_port_number)
         file_storage_dict[sender_full_address] = ''
-        print('sender addr: ', sender_full_address)
     
     print(file_storage_dict)
     return file_storage_dict
@@ -168,7 +167,6 @@ while end_packets_received != number_of_chunks_to_request:
     packet_type = header[0].decode('ascii')
 
     if (packet_type == 'D'):
-        # results_file.write(data.decode("utf-8"))
         data_packets_received += 1
         payload_length = header[2]
         data_bytes_received += payload_length
@@ -190,10 +188,10 @@ print('printing file data dict')
 print(file_data_storage_dict)
 
 # TODO: change this file name when ready
-results_file = open('result.txt', 'a')
+results_file = open(requested_file_name, 'a')
 
 for sender_address, file_data in file_data_storage_dict.items():
-    results_file.write(data.decode("utf-8"))
+    results_file.write(file_data)
 
 results_file.close()
 
