@@ -104,9 +104,6 @@ def send_request_packet_to_sender(tracker_dict, file_name, id):
     sock.sendto(packet_with_header, (sender_host_name, sender_port_number))
 
 def create_file_data_storage_dict(file_id_dict):
-    print('file id dict: ')
-    print(file_id_dict)
-    
     num_senders = len(file_id_dict)
     file_storage_dict = OrderedDict()
     
@@ -118,7 +115,6 @@ def create_file_data_storage_dict(file_id_dict):
         sender_full_address = str(sender_host_name) + ':' + str(sender_port_number)
         file_storage_dict[sender_full_address] = ''
     
-    print(file_storage_dict)
     return file_storage_dict
 
 # for testing
@@ -129,7 +125,7 @@ def create_file_data_storage_dict(file_id_dict):
 args = parse_command_line_args()
 requester_port = args.requester_port
 requested_file_name = args.file_name
-tracker_dict = read_and_parse_tracker_file('tracker-test.txt') #TODO: change this to tracker.txt
+tracker_dict = read_and_parse_tracker_file('tracker.txt') 
 
 # create socket object
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -184,11 +180,8 @@ while end_packets_received != number_of_chunks_to_request:
         data_packets_received = 0
         data_bytes_received = 0
 
-print('printing file data dict')
-print(file_data_storage_dict)
-
-# TODO: change this file name when ready
 results_file = open(requested_file_name, 'a')
+# results_file = open('result.txt', 'a')
 
 for sender_address, file_data in file_data_storage_dict.items():
     results_file.write(file_data)

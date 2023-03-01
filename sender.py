@@ -13,12 +13,11 @@ class Packet_Type(Enum):
 
 def command_line_args_range_checker(input):
     if (not input.isnumeric()):
-        print('invalid int value: ', input)
+        raise argparse.ArgumentTypeError('invalid arg type: must be an int')
     input = int(input)
 
-    #TODO: uncomment this when ready
-    # if input < 2050 or input > 65536:
-    #     raise argparse.ArgumentTypeError('input value out of range')
+    if input < 2050 or input > 65536:
+        raise argparse.ArgumentTypeError('port number out of accepted range')
     return input
 
 def parse_command_line():
@@ -82,12 +81,12 @@ udp_host = socket.gethostname()
 sock.bind((udp_host, sender_port_number))
 
 # wait for request packet
-print('waiting for requester to send the filename it wants to retrieve...')
+# print('waiting for requester to send the filename it wants to retrieve...')
 packet_with_header, sender_address = sock.recvfrom(1024)
 header = struct.unpack("!cII", packet_with_header[:9])
 file_name = packet_with_header[9:]
 
-print('received filename from requester: ', file_name.decode('utf-8'))
+# print('received filename from requester: ', file_name.decode('utf-8'))
 
 requester_host_name = socket.gethostname()
 
@@ -103,8 +102,8 @@ else:
     # send data packets here
     remaining_bytes_to_send = len(data)
     num_packets = math.ceil(remaining_bytes_to_send / max_size_payload_in_bytes)
-    print('num packets to send: ', num_packets)
-    print('-----------------------------------------------------------------------------')
+    # print('num packets to send: ', num_packets)
+    # print('-----------------------------------------------------------------------------')
     sending_interval_in_seconds = (1000 / rate) / 1000
 
     starting_index = 0
