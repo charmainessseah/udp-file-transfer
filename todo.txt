@@ -1,2 +1,10 @@
 receive and order packets based on the sequence number (also take into account various sender machines)
 struct.pack htonl() for seq_no
+recheck that the packet delay/ rate is calculated correctly
+
+
+Clarifying questions
+-------------------------
+Can we assume that all packets are received in the order that they are sent?
+
+What is time duration for requester.py? do we start the time when it starts requesting and end the time when all packets are received?
