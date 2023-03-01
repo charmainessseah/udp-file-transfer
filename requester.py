@@ -36,9 +36,9 @@ def print_receipt_information(header, data, sender_address):
     print('payload:          ', data.decode("utf-8"))
     print()
 
-def print_summary(sender_stats, sender_full_address, start_time, end_time):
-    total_data_packets = sender_stats[sender_full_address]['data_packets_received']
-    total_data_bytes = sender_stats[sender_full_address]['data_bytes_received']
+def print_summary(sender_stats, sender_full_address, sender_host_name_and_port, start_time, end_time):
+    total_data_packets = sender_stats[sender_host_name_and_port]['data_packets_received']
+    total_data_bytes = sender_stats[sender_host_name_and_port]['data_bytes_received']
 
     time_elapsed = end_time - start_time
     time_elapsed_in_miliseconds = time_elapsed.total_seconds() * 1000.0
@@ -121,7 +121,7 @@ def create_file_data_storage_dict(file_id_dict):
         sender_port_number = sender_details['sender_port_number']
         sender_full_address = str(sender_host_name) + ':' + str(sender_port_number)
         file_storage_dict[sender_full_address] = ''
-    
+
     return file_storage_dict
 
 # pass in file_data_storage_dict to have easy access to all sender's full address
@@ -177,6 +177,10 @@ end_packets_received = 0
 while end_packets_received != number_of_chunks_to_request:
     packet_with_header, sender_address = sock.recvfrom(1024)
     sender_full_address = str(sender_address[0]) + ':' + str(sender_address[1])
+    sender_ip_address = sender_address[0]
+    sender_port_number = sender_address[1]
+    sender_host_name = socket.gethostbyaddr(sender_ip_address)[0]
+    sender_host_name_and_port = sender_host_name + ':' + str(sender_port_number)
 
     header = struct.unpack("!cII", packet_with_header[:9])
     data = packet_with_header[9:]
@@ -184,21 +188,20 @@ while end_packets_received != number_of_chunks_to_request:
     packet_type = header[0].decode('ascii')
 
     if (packet_type == 'D'):
-        sender_stats[sender_full_address]['data_packets_received'] += 1
+        sender_stats[sender_host_name_and_port]['data_packets_received'] += 1
         payload_length = header[2]
-        sender_stats[sender_full_address]['data_bytes_received'] += payload_length
+        sender_stats[sender_host_name_and_port]['data_bytes_received'] += payload_length
 
-        file_data_storage_dict[sender_full_address] += data.decode("utf-8")
+        file_data_storage_dict[sender_host_name_and_port] += data.decode("utf-8")
         
     print_receipt_information(header, data, sender_address)
 
     if (packet_type == 'E'):
         end_packets_received += 1
         end_time = datetime.now()
-        print_summary(sender_stats, sender_full_address, start_time, end_time)
+        print_summary(sender_stats, sender_full_address, sender_host_name_and_port, start_time, end_time)
 
 results_file = open(requested_file_name, 'a')
-
 for sender_address, file_data in file_data_storage_dict.items():
     results_file.write(file_data)
 
