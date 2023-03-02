@@ -34,14 +34,15 @@ def parse_command_line():
     return args
 
 # print packet information before each packet is sent to the requester
-def print_packet_information(requester_host_name, sequence_number, data, packet_type):
+def print_packet_information(requester_ip_address, requester_port_number, requester_host_name, sequence_number, data, packet_type):
     if (packet_type == 'D'):
         print('DATA Packet')
     elif (packet_type == 'E'):
         print('END Packet')
 
+    requester_full_address = str(requester_ip_address) + ':' + str(requester_port_number)
     print('send time:       ', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
-    print('requester addr:  ', requester_host_name)
+    print('requester addr:  ', requester_full_address)
     print('Sequence num:    ', sequence_number)
     print('length:          ', len(data))
     print('payload:         ', data.decode('utf-8'))
@@ -57,7 +58,7 @@ def read_file(file_name):
     except:
         return -1
 
-def send_packet(data, packet_type, sequence_number, requester_host_name, requester_port_number):
+def send_packet(data, packet_type, sequence_number, requester_host_name, requester_ip_address, requester_port_number):
     data = data.encode()
 
     # assemble udp header
@@ -65,7 +66,7 @@ def send_packet(data, packet_type, sequence_number, requester_host_name, request
     packet_with_header = header + data
 
     sock.sendto(packet_with_header, (requester_host_name, requester_port_number))
-    print_packet_information(requester_host_name, sequence_number, data, packet_type)
+    print_packet_information(requester_ip_address, requester_port_number, requester_host_name, sequence_number, data, packet_type)
 
 # set command line args as global variables
 args = parse_command_line()
@@ -88,7 +89,8 @@ file_name = packet_with_header[9:]
 
 # print('received filename from requester: ', file_name.decode('utf-8'))
 
-requester_host_name = socket.gethostname()
+requester_ip_address = sender_address[0]
+requester_host_name = socket.gethostbyaddr(requester_ip_address)[0]
 
 data = read_file(file_name)
 
@@ -97,7 +99,7 @@ if data == -1:
     # send END packet
     sequence_number = 0
     length = 0
-    send_packet('', Packet_Type.END.value, sequence_number, requester_host_name, requester_port_number)
+    send_packet('', Packet_Type.END.value, sequence_number, requester_host_name, requester_ip_address, requester_port_number)
 else:     
     # send data packets here
     remaining_bytes_to_send = len(data)
@@ -110,7 +112,7 @@ else:
     while remaining_bytes_to_send > 0:
         sliced_data = data[starting_index:starting_index + max_size_payload_in_bytes]
         time.sleep(sending_interval_in_seconds)
-        send_packet(sliced_data, Packet_Type.DATA.value, sequence_number, requester_host_name, requester_port_number)
+        send_packet(sliced_data, Packet_Type.DATA.value, sequence_number, requester_host_name, requester_ip_address, requester_port_number)
         remaining_bytes_to_send -= max_size_payload_in_bytes
         starting_index += max_size_payload_in_bytes
         sequence_number += len(sliced_data)
@@ -120,4 +122,4 @@ else:
 
     sequence_number = 0
     length = 0
-    send_packet('', Packet_Type.END.value, sequence_number, requester_host_name, requester_port_number)
+    send_packet('', Packet_Type.END.value, sequence_number, requester_host_name, requester_ip_address, requester_port_number)
