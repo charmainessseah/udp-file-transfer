@@ -35,7 +35,7 @@ def print_receipt_information(header, data, sender_address):
     print('length:           ', header[2])
     print('payload:          ', data.decode("utf-8"))
     print()
-
+# probably add some context to what this does. Just more specific, nothing is wrong with this code - Colton
 def print_summary(sender_stats, sender_full_address, sender_host_name_and_port, start_time, end_time):
     total_data_packets = sender_stats[sender_host_name_and_port]['data_packets_received']
     total_data_bytes = sender_stats[sender_host_name_and_port]['data_bytes_received']
@@ -71,7 +71,7 @@ def read_and_parse_tracker_file(file_name):
     #          }
     # }
     tracker_dict =  {}
-
+    # give explanation of what this for loop specifically does - Colton
     for file_line in file_lines:
         words_in_line = file_line.split()
         curr_file_name = words_in_line[0]
@@ -110,6 +110,7 @@ def send_request_packet_to_sender(tracker_dict, file_name, id):
 # file_storage_dict = {
 #   sender_full_address: ''
 # }
+# Further explain what this does - Colton
 def create_file_data_storage_dict(file_id_dict):
     num_senders = len(file_id_dict)
     file_storage_dict = OrderedDict()
